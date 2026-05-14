@@ -22,83 +22,25 @@
 
 
 <details>
-<summary><b>Задание 2</b></summary>
+<summary><b>Задание 2. Memcached</b></summary>
 
-- Написать скрипт и настроить задачу на регулярное резервное копирование домашней директории пользователя с помощью rsync и cron.
-- Резервная копия должна быть полностью зеркальной
-- Резервная копия должна создаваться раз в день, в системном логе должна появляться запись об успешном или неуспешном выполнении операции
-- Резервная копия размещается локально, в директории `/tmp/backup`
-- На проверку направить файл crontab и скриншот с результатом работы утилиты.
+- Установите и запустите memcached.
+
+*Приведите скриншот systemctl status memcached, где будет видно, что memcached запущен.*
+
 ------
 
 ### ОТВЕТ:
-### 1. Создание «умного» скрипта резервного копирования
-Скрипт поддерживает два режима: интерактивный (запрашивает пути у пользователя) и автоматический (использует значения по умолчанию для cron).
+Установка и запуск сервиса в Debian выполнены с помощью команд:
 
 ```bash
-#!/bin/bash
-
-# Настройки по умолчанию (для работы через cron)
-DEFAULT_SOURCE="$HOME/"
-DEFAULT_TARGET="/tmp/backup"
-
-# Проверяем, запущен ли скрипт в интерактивном режиме (есть ли терминал)
-if [ -t 0 ]; then
-    # Режим ручного запуска: спрашиваем пользователя
-    echo "--- Интерактивный режим резервного копирования ---"
-    
-    read -p "Источник [$DEFAULT_SOURCE]: " SOURCE_DIR
-    SOURCE_DIR=${SOURCE_DIR:-$DEFAULT_SOURCE} # Если нажать Enter, возьмет значение по умолчанию
-    
-    read -p "Назначение [$DEFAULT_TARGET]: " TARGET_DIR
-    TARGET_DIR=${TARGET_DIR:-$DEFAULT_TARGET}
-else
-    # Режим cron: используем настройки по умолчанию без вопросов
-    SOURCE_DIR=$DEFAULT_SOURCE
-    TARGET_DIR=$DEFAULT_TARGET
-fi
-
-# Проверка источника
-if [ ! -d "$SOURCE_DIR" ]; then
-    logger "Backup error: Directory $SOURCE_DIR not found"
-    exit 1
-fi
-
-# Создание папки назначения
-mkdir -p "$TARGET_DIR"
-
-# Запуск зеркалирования
-if rsync -av --delete --checksum --exclude='.*/' "$SOURCE_DIR" "$TARGET_DIR"; then
-    logger "Backup successful: $SOURCE_DIR to $TARGET_DIR"
-else
-    logger "Backup failed: $SOURCE_DIR to $TARGET_DIR"
-fi
+sudo apt update && sudo apt install memcached -y
+sudo systemctl start memcached
+sudo systemctl enable memcached
+sudo systemctl status memcached
 ```
-
-### 2. Настройка прав и планировщика cron
-
-Чтобы скрипт запускался ежедневно в 03:00, необходимо выполнить следующее:
-
-1. `chmod +x backup.sh` (сделать исполняемым).
-2. `crontab -e` и добавьте строку:
-
-```config
-0 3 * * * /bin/bash /home/$(whoami)/Rezervnoye-kopirovaniye_backup/backup.sh
-```
-
-### 3. Проверка работоспособности
-
-- Для проверки поставил в cron выполнение каждую минуту
-<summary>Настройка cron</summary>
-<img src="img/3.jpg" width = 100%>
-
-- Для просмотра лога журналов через journalctl в консоли:
-
-```config
-journalctl | grep "Backup" | tail -n 5
-```
-<summary>Просмотр содержимого `/tmp` и логов через journalctl</summary>
-<img src="img/4.jpg" width = 100%>
+**Скриншот статуса службы memcached:**
+![Статус Memcached](./img/1.jpg)
 
 
 
